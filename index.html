@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="ar" hreflang="ar-sa"> 
+  <head>
+  	
+<!-- End Google Tag Manager -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=0">
+     <link href='Quran.png' rel='icon' type='image/x-icon'/>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta property="og:title" content="القرآن الكريم كاملاً بصوت القارئ مشاري راشد العفاسي Alafasy" />
+    <meta property="og:description" content="تحميل القرآن الكريم كامل بصوت مشاري العفاسي mp3  تنزيل المصحف بصوت مشاري العفاسي كاملا بجودة عالية و برابط واحد مباشر إستماع فوري بدون إعلانات">
+    <meta name="description" content="القرآن الكريم/مشاري العفاسي/الشيخ مشاري/راشد العفاسي/حفص عن عاصم" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+	<meta charset="utf-8">
+    <title>القرآن الكريم الشيخ مشاري العفاسي Alafasy </title>
+    <meta content="الشيخ مشاري راشد العفاسي تحميل و استماع حفص عن عاصم - القرآن الكريم Mp3"name="keywords">
+  
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+      integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w=="
+      crossorigin="anonymous"
+    />
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./main.css" />
+  </head>
+  <body>
+    <div class="player">
+      <!-- Dashboard -->
+      <div class="dashboard">
+        <!-- Header -->
+        <header>
+          <h1>مشاري العفاسي Alafasy</h1>
+          <h2>Rawan</h2>
+        </header>
+
+        <!-- CD -->
+        <div class="cd">
+          <div class="cd-thumb" style="background-image: url('Quran.jpg');"></div>
+        </div>
+
+        <!-- Control -->
+        <div class="control">
+          <div class="btn btn-repeat">
+            <i class="fas fa-redo"></i>
+          </div>
+          <div class="btn btn-prev">
+            <i class="fas fa-step-backward"></i>
+          </div>
+          <div class="btn btn-toggle-play">
+            <i class="fas fa-pause icon-pause"></i>
+            <i class="fas fa-play icon-play"></i>
+          </div>
+          <div class="btn btn-next">
+            <i class="fas fa-step-forward"></i>
+          </div>
+          <div class="btn btn-random">
+            <i class="fas fa-random"></i>
+          </div>
+        </div>
+
+        <input id="progress" class="progress" type="range" step="1" value="0" min="0" max="100" />
+
+        <audio id="audio" src=""></audio>
+      </div>
+
+      <!-- Playlist -->
+      <div class="playlist"></div>
+    </div>
+    <script>
+      /**
+       * 1. Render songs -> OK
+       * 2. Scroll top -> OK
+       * 3. Play / pause / seek(tua) // bug in seek
+       * 4. CD rotate -> OK
+       * 5. Next / prev -> OK
+       * 6. Random -> OK
+       * 7. Next / Repeat when ended -> OK
+       * 8. Active song -> OK
+       * 9. Scroll active song into-view -> bug when song go to index 0 1 2
+       * 10. Play song when click -. OK
+       * 11. Save to localStorage
+       */
+
+      const $ = document.querySelector.bind(document);
+      const $$ = document.querySelectorAll.bind(document);
+
+      const PLAYER_STORAGE_KEY = "VTC_PLAYER";
+
+      const player = $(".player");
+      const cd = $(".cd");
+
+      const heading = $("header h2");
+      const cdThumb = $(".cd-thumb");
+      const audio = $("#audio");
+      const playlist = $(".playlist");
+
+      const playBtn = $(".btn-toggle-play");
+      const progress = $("#progress");
+
+      const prevBtn = $(".btn-prev");
+      const nextBtn = $(".btn-next");
+
+      const randomBtn = $(".btn-random");
+      const repeatBtn = $(".btn-repeat");
+
+      const app = {
+        currentIndex: 0, //vị trí bài hát hiện tại từ 0 -> n-1
+        isPlaying: false,
+        isRandom: false,
+        isRepeat: false,
+        config: JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY)) || {},
+        songs: [
+          {
+            name: "AL-Faatihah سورة الفاتحة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/001.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+          {
+            name: "AL-Baqarah سورة البقرة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/002.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+          {
+            name: "Aali-`Imraan سورة آل عمران",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/003.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+          {
+            name: "An-Nisaa' سورة النساء",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/004.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+          {
+            name: "Al-Ma'idah سورة المائدة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/005.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+          {
+            name: "Al-an`aam سورة الأنعام",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/006.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+          {
+            name: "Al-Aaraf سورة الأعراف",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/007.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+          {
+            name: "Al-Anfaal سورة الأنفال",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/008.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+          {
+            name: "At-Tawbah سورة التوبة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/009.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+          {
+            name: "Yoonus سورة يونس",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/010.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Hood سورة هود",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/011.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Yoosuf سورة يوسف",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/012.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Ar-Raad سورة الرعد",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/013.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Ibraheem سورة إبراهيم",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/014.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Hajar سورة الحجر",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/015.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "An-Nahl سورة النحل",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/016.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Isra' سورة الإسراء",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/017.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Kahf سورة الكهف",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/018.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Maryam سورة مريم",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/019.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Taa haa سورة طه",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/020.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-aAnbiyaa' سورة الأنبياء",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/021.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Hajj سورة الحج",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/022.mp3",
+            image: "Quran_logo.png",
+          },
+		 
+		  {
+            name: "al-Mu'minoon سورة المؤمنون",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/023.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "An-Noor سورة النور",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/024.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Furqaan سورة الفرقان",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/025.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Ash-shu`araa' سورة الشعراء",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/026.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "An-Naml سورة النمل",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/027.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Qasas سورة القصص",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/028.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Ankaboot سورة العنكبوت",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/029.mp3",
+            image: "Quran_logo.png",
+          },
+		
+		 {
+            name: "Ar-Room سورة الروم",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/030.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Luqmaan سورة لقمان",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/031.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "As-Sajdah سورة السجدة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/032.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-AHzab سورة الأحزاب",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/033.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "As-Saba' سورة سبأ",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/034.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Fatir سورة فاطر",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/035.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "yaa seen سورة يس",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/036.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "AS-Saaffaat سورة الصافات",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/037.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Saad سورة ص",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/038.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Az-Zumar سورة الزمر",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/039.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Ghafir سورة غافر",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/040.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Fussilat سورة فصلت",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/041.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Ash-Shooraa سورة الشورى",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/042.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Azl-Zukhruf سورة الزخرف",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/043.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Ad-Dukhaan سورة الدخان",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/044.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Jaathiyah سورة الجاثية",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/045.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Ahqaaf سورة الأحقاف",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/046.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Muhammad سورة محمد",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/047.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Fath سورة الفتح",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/048.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Hujuraat سورة الحجرات",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/049.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Qaaf سورة ق",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/050.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Ad-Dhaariyaat سورة الذاريات",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/051.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "At-Toor سورة الطور",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/052.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "An-Najm سورة النجم",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/053.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Qamar سورة القمر",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/054.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Ar-Rahmaan سورة الرحمن",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/055.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Waaqi`ah سورة الواقعة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/056.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Hadeed سورة الحديد",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/057.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Mujaadilah سورة المجادلة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/058.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Hashr سورة الحشر",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/059.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-MumtaHanah سورة الممتحنة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/060.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "As-Saff سورة الصف",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/061.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Jumu`ah سورة الجمعة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/062.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Munafiqoon سورة المنافقون",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/063.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "At-Taghaabun سورة التغابن",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/064.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "At-Talaaq سورة الطلاق",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/065.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "At-Tahreem سورة التحريم",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/066.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Mulk سورة الملك",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/067.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Qalam سورة القلم",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/068.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Haaqqah سورة الحاقة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/069.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Ma`aarij سورة المعارج",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/070.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Nooh سورة نوح",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/071.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Jinn سورة الجن",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/072.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Muzammil سورة المزمل",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/073.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Muddaththir سورة المدثر",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/074.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Qiyaamah سورة القيامة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/075.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Insane سورة الإنسان",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/076.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Mursalaat سورة المرسلات",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/077.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "An-Naba' سورة النبأ",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/078.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "An-Naazi`aat سورة النازعات",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/079.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "`Abasa سورة عبس",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/080.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "At-Takweer سورة التكوير",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/081.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-InfiTaar سورة الانفطار",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/082.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Mutaffifeen سورة المطففين",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/083.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Inshiqaaq سورة الانشقاق",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/084.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Burooj سورة البروج",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/085.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "At-Taariq سورة الطارق",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/086.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "al-'Aala سورة الأعلى",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/087.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Ghaashiyah سورة الغاشية",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/088.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Fajr سورة الفجر",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/089.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Balad سورة البلد",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/090.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Ash-Shams سورة الشمس",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/091.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Lail سورة الليل",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/092.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Ad-DuHaa سورة الضحى",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/093.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Ssh-Sharh سورة الشرح",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/094.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "At-Teen سورة التين",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/095.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-`alaq سورة العلق",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/096.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-qadr سورة القدر",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/097.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Bayyinah سورة البينة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/098.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Az-Zalzala سورة الزلزلة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/099.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Aadiyaat سورة العاديات",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/100.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Qaari`ah سورة القارعة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/101mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "At-Takaathur سورة التكاثر",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/102.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Asr سورة العصر",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/103.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Humazah سورة الهمزة",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/104.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Feel سورة الفيل",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/105.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Quraish سورة قريش",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/106.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Maa`oon سورة الماعون",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/107.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Kauthar سورة الكوثر",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/108.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		  {
+            name: "Al-Kafiroon سورة الكافرون",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/109.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "An-NaSr سورة النصر",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/110.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Masad سورة المسد",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/111.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-IkhlaaS سورة الإخلاص",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/112.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "Al-Falaq سورة الفلق",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/113.mp3",
+            image: "Quran_logo.png",
+          },
+		  
+		   {
+            name: "An-naas سورة الناس",
+            singer: "مشاري العفاسي",
+            path: "https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/114.mp3",
+            image: "Quran_logo.png",
+          },
+		 
+		  
+		  
+        ],
+        setConfig: function (key, value) {
+          this.config[key] = value;
+          localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify(this.config));
+        },
+        render: function () {
+          const htmls = this.songs.map((song, index) => {
+            return `
+                                <div class="song ${
+                                  index === this.currentIndex ? "active" : ""
+                                }" data-index="${index}">
+                                    <div class="thumb" style="background-image: url('${
+                                      song.image
+                                    }');">
+                                    </div>
+                                    <div class="body">
+                                        <h3 class="title">${song.name}</h3>
+                                        <p class="author">${song.singer}</p>
+                                    </div>
+                                    <div class="option">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                    </div>
+                                </div>
+                            `;
+          });
+          playlist.innerHTML = htmls.join("");
+        },
+        defineProperties: function () {
+          Object.defineProperty(this, "currentSong", {
+            get: function () {
+              return this.songs[this.currentIndex];
+            },
+          });
+        },
+        handleEvents: function () {
+          const cdWidth = cd.offsetWidth; //kich thuoc chieu ngang hien tai la 200px
+
+          // Xử lý cd quay và dừng
+          const cdThumbAnimate = cdThumb.animate(
+            [{ transform: "rotate(360deg)" }],
+            {
+              //option the hien quay ntn
+              duration: 10000, //10second
+              iterations: Infinity, //iterations la loop bao nhieu lan
+            }
+          );
+          cdThumbAnimate.pause(); // chua play thi chua quay
+
+          // Xử lý phóng to / thu nhỏ cd
+          document.onscroll = function () {
+            const scrollTop =
+              window.scrollY || document.documentElement.scrollTop;
+            const newCdWidth = cdWidth - scrollTop;
+
+            cd.style.width = newCdWidth > 0 ? newCdWidth + 'px' : 0//neu cd chua thu het
+            //cd.style.width = newCdWidth + "px";
+            cd.style.opacity = newCdWidth / cdWidth;//opacity tu 0 -> 1 thi lay kich thuoc moi chia cho kich thuoc cu thi ra ti le
+          };
+          // Xử lý khi click play
+          playBtn.onclick = function () {
+            //ở đây chỉ play hoặc pause còn xử lý trạng thái ở dưới
+            if (app.isPlaying) {
+              audio.pause();
+            } else {
+              audio.play();
+            }
+          };
+
+          // Khi song được play
+          audio.onplay = function () {
+            app.isPlaying = true;
+            player.classList.add("playing");
+            cdThumbAnimate.play();
+          };
+
+          //Khi song bị pause
+          audio.onpause = function () {
+            app.isPlaying = false;
+            player.classList.remove("playing");
+            cdThumbAnimate.pause();
+          };
+
+          // Khi tiến độ bài hát thay đổi
+          audio.ontimeupdate = function () {
+            if (audio.duration) {
+              const progressPercent = Math.floor(
+                (audio.currentTime / audio.duration) * 100
+              );
+              progress.value = progressPercent;
+            }
+          };
+
+          // Xử lý khi tua song
+          progress.onchange = function (e) {
+            const seekTime = (audio.duration / 100) * e.target.value;
+            audio.currentTime = seekTime;
+          };
+
+          // Khi next song
+          nextBtn.onclick = function () {
+            if (app.isRandom) {
+              app.playRandomSong(); //khi thực hiện random ở trên xong thì gọi lại hàm này
+            } else {
+              app.nextSong();
+            }
+            audio.play();
+            app.render(); //khi sang bai nao thi active bai do
+            app.scrollToActiveSong();
+          };
+
+          // Khi previous song
+          prevBtn.onclick = function () {
+            if (app.isRandom) {
+              app.playRandomSong(); //khi thực hiện random ở trên xong thì gọi lại hàm này
+            } else {
+              app.prevSong();
+            }
+            audio.play();
+            app.render(); //khi sang bai nao thi active bai do
+          };
+
+          // Xử lý bật / tắt random song
+          randomBtn.onclick = function () {
+            app.isRandom = !app.isRandom;
+            app.setConfig("isRandom", app.isRandom);
+            randomBtn.classList.toggle("active", app.isRandom); // khi click thìhì icon sẽ đỏ lên
+            //đối số t2 của toggle là boolean nên nếu là true là add class ở đối số t1 vào và ngược lại
+          };
+
+          //Xử lý lặp lại 1 song
+          repeatBtn.onclick = function () {
+            app.isRepeat = !app.isRepeat; //đối nhau
+            app.setConfig("isRepeat", app.isRepeat);
+            repeatBtn.classList.toggle("active", app.isRepeat);
+          };
+
+          // Xử lý next song khi audio ended
+          audio.onended = function () {
+            if (app.isRepeat) {
+              audio.play();
+            } else {
+              nextBtn.click();
+            }
+          };
+
+          // Lắng nghe sự kiện click vào playlist
+          playlist.onclick = function (e) {
+            // e là event ta nhận được sau khi nhấn chuột xuống
+            //console.log(e.target)// target chính là mục tiêu nó sẽ trả về chính cái bạn target vào
+            const songNode = e.target.closest(".song:not(.active)");
+            if (songNode || e.target.closest(".option")) {
+              //closest sẽ trả 1 là chính nó 2 là thẻ cha của nó
+              // not active là css selector (bài nào đang play thì ko cần active nữa)
+              if (songNode) {
+                app.currentIndex = Number(songNode.dataset.index);
+                app.loadCurrentSong();
+                app.render();
+                audio.play();
+              }
+
+              // Xử lý khi click vào option ...
+            }
+          };
+        },
+
+        scrollToActiveSong: function () {
+          setTimeout(() => {
+            $(".song.active").scrollIntoView({
+              behavior: "smooth",
+              block: "nearest",
+            });
+          }, 500);
+        },
+
+        // getCurrentSong: function() {
+        //     return this.songs[this.song];
+        // },
+
+        // hàm này dùng để lấy ra dữ liệu bài hát
+        loadCurrentSong: function () {
+          heading.textContent = this.currentSong.name;
+          cdThumb.style.backgroundImage = `url('${this.currentSong.image}')`;
+          audio.src = this.currentSong.path;
+        },
+
+        loadConfig: function () {
+          this.isRandom = this.config.isRandom;
+          this.isRepeat = this.config.isRepeat;
+        },
+
+        nextSong: function () {
+          this.currentIndex++;
+          if (this.currentIndex >= this.songs.length) {
+            this.currentIndex = 0;
+          }
+          this.loadCurrentSong(); //next la se tai thong tin moi
+        },
+
+        prevSong: function () {
+          this.currentIndex--;
+          if (this.currentIndex < 0) {
+            this.currentIndex = this.songs.length - 1;
+          }
+          this.loadCurrentSong(); //next la se tai thong tin moi
+        },
+
+        playRandomSong: function () {
+          // random thì phải trừ bài hiện tại
+          let newIndex;
+          do {
+            newIndex = Math.floor(Math.random() * this.songs.length);
+          } while (newIndex === this.currentIndex); // index mới khác index hiện tại khi click next ỏ prev
+          // trong while sẽ là điều kiện sai // nếu vẫn bằng cái cũ thì quay lại lặp
+
+          this.currentIndex = newIndex; //sau khi qua do while thì set lại bài hát mới
+          this.loadCurrentSong();
+        },
+        start: function () {
+          // Gán cấu hình từ config vào ứng dụng
+          this.loadConfig();
+
+          // Định nghĩa thuộc tính cho Object
+          this.defineProperties();
+
+          // Lắng nghe / Xử lý các sự kiện (DOM events)
+          this.handleEvents();
+
+          // Tải thông tin bài hát đầu tiên vào UI khi chạy ứng dụng
+          this.loadCurrentSong();
+
+          // Render playlist
+          this.render();
+
+          // hiển thị trạng thái ban đầu của btn repeat
+          randomBtn.classList.toggle("active", this.isRandom);
+          repeatBtn.classList.toggle("active", this.isRepeat);
+        },
+      };
+      app.start();
+      
+    </script>
+	 
+  </body>
+  
+</html>
